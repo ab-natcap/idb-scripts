@@ -44,10 +44,6 @@ for file in srtm_files:
     # wget.download(file_url, file)  # using requests instead (below)
 
     print('Beginning file download with requests {}'.format(file_url))
-    # r = requests.get(file_url,  auth=(user, passwd))
-    # with open(file, 'wb') as f:
-    #     f.write(r.content)
-    #     print(f.name)
     # Create and submit request and download file
     with requests.get(file_url, stream=True, auth=(user, passwd)) as response:
         if response.status_code != 200:
