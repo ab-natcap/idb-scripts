@@ -1,0 +1,64 @@
+---
+title: "Crop CGMFC21 Rasters"
+author: "Allison Bailey"
+date: "10/15/2019"
+output: html_document
+---
+
+This notebook is to crop CGMFC21 annual rasters, 2000-2012
+Downloaded from https://doi.org/10.7910/DVN/HKGBGS
+13 individual tif files each with global extent
+a2000mfw.tif --> a2012mfw.tif
+
+Crop to Andros Island AOI
+
+# Setup
+### Load Packages..
+
+```{r setup, include=FALSE, echo = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(raster)
+library(rgdal)
+library(here)
+
+```
+
+```{r crop}
+tifdir <- "data/source/CGMFC21"
+shpdir <- "data/source/andros_master_plan/Database_and_DataUpdates/AOI/AOI_160211"
+shpfile <- here::here(shpdir, "AOI_dd84.shp")
+aoi <- readOGR(shpfile)
+prefix <- "andros"
+
+tifs <- c(
+  "a2000mfw.tif",
+  "a2001mfw.tif",
+  "a2002mfw.tif",
+  "a2003mfw.tif",
+  "a2004mfw.tif",
+  "a2005mfw.tif",
+  "a2006mfw.tif",
+  "a2007mfw.tif",
+  "a2008mfw.tif",
+  "a2009mfw.tif",
+  "a2010mfw.tif",
+  "a2011mfw.tif",
+  "a2012mfw.tif"
+  )
+
+# Test 
+# in_tif_file <- here::here(tifdir, "a2000mfw.tif")
+# mfw_raster <- raster(in_tif_file)
+# out_tif_file <- here::here(tifdir, paste(prefix,"a2000mfw.tif",sep="_"))
+# out_crop <-	crop(mfw_raster, aoi, filename=out_tif_file)
+  
+for (tif in tifs) {
+  in_tif_file <- here::here(tifdir, tif)
+  mfw_raster <- raster(in_tif_file)
+  out_tif_file <- here::here(tifdir, paste(prefix,tif,sep="_"))
+  out_crop <-	crop(mfw_raster, aoi, filename=out_tif_file, overwrite=TRUE)
+}
+
+```
+
+

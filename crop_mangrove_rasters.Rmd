@@ -1,0 +1,170 @@
+---
+title: "Crop Mangrove Rasters to Andros"
+author: "Allison Bailey"
+date: "10/17/2019"
+output: html_document
+---
+
+This notebook is to crop mangrove rasters
+
+Crop to Andros Island AOI
+
+# Setup
+### Load Packages..
+
+```{r setup, include=FALSE, echo = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(raster)
+library(rgdal)
+library(here)
+library(sf)
+library(tools)
+library(dplyr)
+library(stringr)
+library(purrr)
+```
+
+```{r base_vars}
+datadir <- "data"
+aoidir <- "data/source/andros_master_plan/Database_and_DataUpdates/AOI/AOI_160211"
+shpfile4326 <- here(aoidir, "AOI_dd84.shp")
+aoi_4326 <- st_read(shpfile4326)
+aoi_4326_sp <- as_Spatial(aoi_4326)  #readOGR(shpfile4326)
+```
+
+```{r crop_gmf}
+# Crop the Global Mangrove Forests Data (Giri et al 2011)
+in_tif_file <- here(datadir, "source/sedac/W80N30", "W80N30.tif")
+in_raster <- raster(in_tif_file)
+dt <- dataType(in_raster)
+out_tif_file <- here(datadir, "work/mangroves", paste("gmf","W80N30","andros.tif", sep="_"))
+out_crop <-	crop(in_raster, aoi_4326_sp, filename=out_tif_file, datatype=dt, overwrite=TRUE)
+```
+
+```{r crop_gmw}
+# Crop the Global Mangrove Watch Data (Bunting et al 2018)
+shapes <- c(
+  "GMW_2016_v2.shp",
+  "GMW_2015_v2.shp",
+  "GMW_2010_v2.shp",
+  "GMW_2009_v2.shp",
+  "GMW_2008_v2.shp",
+  "GMW_2007_v2.shp",
+  "GMW_1996_v2.shp"
+  )
+shapedir <- here(datadir, "source/unep/gmw/GMW_001_GlobalMangroveWatch/01_Data")
+out_gpkg <- here(datadir, "work/mangroves", "mangroves_andros.gpkg")
+
+for (shp in shapes) {
+  in_shapefile <- file.path(shapedir, shp)
+  in_shape <- st_read(in_shapefile)
+  out_layer <- paste(file_path_sans_ext(shp),"andros",sep="_")
+  out_clip <- st_intersection(in_shape, aoi_4326)
+  st_write(out_clip, dsn=out_gpkg, layer=out_layer, overwrite=TRUE)
+}
+
+```
+
+```{r crop_wam}
+# Crop World Atlas of Mangroves (Spalding et al 2010)
+shapedir <- here(datadir, "source/unep/wam/14_001_WCMC011_AtlasMangrove2010_v3/01_Data")
+out_gpkg <- here(datadir, "work/mangroves", "mangroves_andros.gpkg")
+
+shp <- "WCMC011_AtlasMangrove2010_Py_v3.shp"
+in_shapefile <- file.path(shapedir, shp)
+in_shape <- st_read(in_shapefile)
+out_layer <- "wam2010_andros"
+out_clip <- st_intersection(in_shape, aoi_4326)
+st_write(out_clip, dsn=out_gpkg, layer=out_layer)
+
+```
+```{r crop_ht_biomass}
+# Crop the Height and Biomass Data (Simard et al 2019)
+
+tifs <- c(
+  "Mangrove_agb_Bahamas.tif",
+  "Mangrove_hba95_Bahamas.tif",
+  "Mangrove_hmax95_Bahamas.tif"
+  )
+tifdir <- here(datadir, "source/ornldaac/orders/9808b04708cad33b41985bed6154f877/CMS_Global_Map_Mangrove_Canopy/data")
+out_dir <- here(datadir, "work/mangroves")
+
+for (tif in tifs) {
+  in_tif_file <- file.path(tifdir, tif)
+  in_raster <- raster(in_tif_file)
+  dt <- dataType(in_raster)
+  out_tif_file <- file.path(out_dir,str_replace(tif,"Bahamas","andros"))
+  out_crop <-	crop(in_raster, aoi_4326_sp, filename=out_tif_file, datatype=dt, overwrite=TRUE)
+}
+```
+
+```{r crop_gfc}
+# Crop the Global Forest Change Data (Hansen et al. 2018)
+
+tifs <- c(
+  "Hansen_GFC-2018-v1.6_datamask_30N_080W.tif",
+  "Hansen_GFC-2018-v1.6_first_30N_080W.tif",
+  "Hansen_GFC-2018-v1.6_gain_30N_080W.tif",
+  "Hansen_GFC-2018-v1.6_last_30N_080W.tif",
+  "Hansen_GFC-2018-v1.6_lossyear_30N_080W.tif",
+  "Hansen_GFC-2018-v1.6_treecover2000_30N_080W.tif"
+  )
+tifdir <- here(datadir, "source/umd")
+out_dir <- here(datadir, "work/mangroves")
+
+for (tif in tifs) {
+  in_tif_file <- file.path(tifdir, tif)
+  in_raster <- raster(in_tif_file)
+  dt <- dataType(in_raster)
+  out_tif_file <- file.path(out_dir,paste(file_path_sans_ext(tif),"andros.tif",sep="_"))
+  out_crop <-	crop(in_raster, aoi_4326_sp, filename=out_tif_file, datatype=dt, overwrite=TRUE)
+}
+```
+
+```{r crop_fnf}
+# Crop the TanDEM-X Forest/Non-Forest Data (Martone et al. 2011-2015)
+
+tifs <- c(
+  "TDM_FNF_20_N25W079.tiff",
+  "TDM_FNF_20_N25W078.tiff",
+  "TDM_FNF_20_N24W079.tiff",
+  "TDM_FNF_20_N24W078.tiff",
+  "TDM_FNF_20_N23W078.tiff"
+  )
+
+out_dir <- here(datadir, "work/mangroves")
+
+for (tif in tifs) {
+  print(tif)
+  fnf_grid <- file_path_sans_ext(tif)
+  tifdir <- here(datadir, "source/tandemX/fnf", fnf_grid, "FNF")
+  in_tif_file <- file.path(tifdir, tif)
+  in_raster <- raster(in_tif_file)
+  dt <- dataType(in_raster)
+  out_tif_file <- file.path(out_dir,paste(fnf_grid,"andros.tif",sep="_"))
+  out_crop <-	crop(in_raster, aoi_4326_sp, filename=out_tif_file, datatype=dt, overwrite=TRUE)
+}
+
+## Note TDM_FNF_20_N24W078.tiff is completely inside the AOI
+#  So, it does not get a 'cropped' copy in the new directory.   Manually copied this one over
+```
+```{r merge_fnf}
+# Merge the TanDEM-X Forest/Non-Forest Tiles into one 
+
+tifs <- c(
+  "TDM_FNF_20_N25W079_andros.tif",
+  "TDM_FNF_20_N25W078_andros.tif",
+  "TDM_FNF_20_N24W079_andros.tif",
+  "TDM_FNF_20_N24W078_andros.tif",
+  "TDM_FNF_20_N23W078_andros.tif"
+  )
+
+tifdir <- here(datadir, "work/mangroves")
+in_tif_files <- file.path(tifdir, tifs)
+in_rasters <- map(in_tif_files, raster)
+out_tif_file <- file.path(tifdir, "TDM_FNF_andros.tif")
+in_rasters$filename <- out_tif_file
+
+fnf_merge <- do.call(merge, in_rasters)
+```
+
