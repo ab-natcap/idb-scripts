@@ -114,7 +114,7 @@ def main(srtm_source):
 # Source directory, SRTM
 source_dir = '/Users/arbailey/natcap/idb/data/source/srtm/nasa'
 # Working and output directory
-work_dir = '/Users/arbailey/natcap/idb/data/work/andros_mangrovehgt/srtm'
+work_dir = '/Users/arbailey/natcap/idb/data/work/mangroves/srtm'
 
 # srtm_source = os.path.join(source_dir, 'N23W078.SRTMGL1.hgt.zip')  # one file for testing
 
