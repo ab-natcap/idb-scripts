@@ -63,6 +63,12 @@ wam_prefix = 'wam'
 # Global Mangrove Watch
 gmw2016_path = os.path.join(data_dir, 'gmw2016_Bahamas_MAR.shp')
 gmw2016_prefix = 'gmw2016'
+# Global Mangrove Forests (Andros)
+gmf_path = os.path.join(data_dir, 'gmf_andros.shp')
+gmf_prefix = 'gmf'
+# TNC Landsat Mangroves
+tnc_path = os.path.join(data_dir, 'tnc_mangroves_andros.shp')
+tnc_prefix = 'tnc'
 
 
 # Get a list of raster files with the hmax or hba prefix in the work directory
@@ -93,4 +99,20 @@ for in_raster, out_raster in zip(hmax_rasters, gmw2016_hmax_rasters):
 for in_raster, out_raster in zip(hba_rasters, gmw2016_hba_rasters):
     main(in_raster, gmw2016_path, out_raster)
 
+# Andros only tiles
+andros_tiles = ['N25W079', 'N25W078', 'N24W079', 'N24W078', 'N23W078']
+hmax_rasters = ['hmax_{}.tif'.format(tile) for tile in andros_tiles]
+hba_rasters = ['hba_{}.tif'.format(tile) for tile in andros_tiles]
+
+# TNC Landsat data
+tnc_hmax_rasters = [add_prefix(r, tnc_prefix) for r in hmax_rasters]
+tnc_hba_rasters = [add_prefix(r, tnc_prefix) for r in hba_rasters]
+
+# TNC Landsat mask of Max Height rasters
+for in_raster, out_raster in zip(hmax_rasters, tnc_hmax_rasters):
+    main(in_raster, tnc_path, out_raster)
+
+# TNC Landsat mask of Basal area weighted height rasters
+for in_raster, out_raster in zip(hba_rasters, tnc_hba_rasters):
+    main(in_raster, tnc_path, out_raster)
 
