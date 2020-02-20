@@ -70,9 +70,11 @@ if __name__ == '__main__':
     tnc_prefix = 'tnc'
 
     # Input Raster
-    hgt_raster = 'Andros_TDX_DEM_12m_EGM2008_CanopyHeight.tif'
-    in_raster_dir = '/Users/arbailey/natcap/idb/data/source/nasa/Andros_12m_CHM_AGB'
-    in_raster = os.path.join(in_raster_dir, 'Andros_TDX_DEM_12m_EGM2008_CanopyHeight.tif')
+    # hgt_raster = 'Andros_TDX_DEM_12m_EGM2008_CanopyHeight.tif'  # original - 2020-02-05
+    # in_raster_dir = '/Users/arbailey/natcap/idb/data/source/nasa/Andros_12m_CHM_AGB'  # original
+    hgt_raster = 'Andros_TDX_DEM_12m_EGM2008_CHM_Cal_mask.tif'  # updated - 2020-02-18
+    in_raster_dir = '/Users/arbailey/natcap/idb/data/source/nasa/TDXCHMAGBAndros'  # updated
+    in_raster = os.path.join(in_raster_dir, hgt_raster)
 
     # Working directory
     work_dir = os.path.join(data_dir, 'tandemx')
