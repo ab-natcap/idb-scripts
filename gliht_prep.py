@@ -3,7 +3,8 @@
 Author: Allison Bailey
 Date: 2020-02-28
 
-Convert G-LiHT grids to points in a geopackage
+Convert G-LiHT grids to merged point data set
+Output to geofeather file for subsequent processing
 
 Assumes input data are in 32616  (UTM 16N, WGS-84) and output data are in 4326 (lat/long WGS-84)
 
