@@ -141,7 +141,6 @@ def make_unique_raster(in_raster_path, out_raster_path):
     raster_unique_meta['driver'] = 'GTiff'
 
     # Convert SRTM unique to a Raster
-    SRTM_uniqueid_source = 'SRTM30m_Andros_uniqueid.tif'
     with rio.open(out_raster_path, 'w', **raster_unique_meta) as dst:
         dst.write(raster_uniqueid_np, 1)
 
