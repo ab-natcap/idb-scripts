@@ -432,6 +432,7 @@ for dt in image_dates:
     # print(mosaic.getInfo())
     # Clip mosaic to nearshore mask
     print('Clipping mosaic.....')
+    # Already clipped individual images with nearshore mask, so don't need to do it here anymore
     # mosaic_nearshore = mosaic.clipToCollection(nearshore_mask) #.setDefaultProjection(image_prj)
     mosaic_nearshore = mosaic
     print(mosaic_nearshore.getInfo())
@@ -481,7 +482,7 @@ for dt in image_dates:
                                          maxPixels=1.0E13)
     task.start()
 
-    # # Export the classified clipped mosaic
+    # # Export the classified clipped mosaic to Drive
     # output_image = 'classclipped_' + image_date.getInfo()
     # task = ee.batch.Export.image.toDrive(image=mosaic_nearshore,
     #                                      description=output_image,
@@ -491,12 +492,6 @@ for dt in image_dates:
     #                                      maxPixels=1.0E13)
     # task.start()
 
-    # ## Export Accuracy Assessment  Points
-    # output_layer = 'aaPoints_' + image_date.getInfo()
-    # task = ee.batch.Export.table.toDrive(aaPoints,output_layer,
-    #                                      folder=output_folder,
-    #                                      fileFormat='SHP')
-    # task.start()
 
 
 # # ******************** Visualization *****************************
