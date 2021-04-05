@@ -44,7 +44,7 @@ for dt in image_dates:
     print(aaPoints.size().getInfo())
 
     # ******************** Export *****************************
-    output_folder = 'geeout/s2sr_classified/'
+    output_folder = 'sargassum/aa/'
 
     ## Export Accuracy Assessment Points
     output_layer = 'aaPoints_' + image_date_string_short
