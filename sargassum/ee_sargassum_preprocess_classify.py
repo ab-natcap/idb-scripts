@@ -9,12 +9,27 @@ except Exception as e:
 # import geetools
 import geemap
 
-# Data sources (other than S2)
+# Image and cloud sources
+s2_source = 'COPERNICUS/S2_SR'  # Surface Reflectance
+# s2_source = 'COPERNICUS/S2'  # Top of Atmosphere
+s2_clouds_source = 'COPERNICUS/S2_CLOUD_PROBABILITY'
+asset_location = 'projects/ee-abnatcap/assets/sargassum/'
 
+# Data sources (other than S2)
 SRTM = ee.Image("USGS/SRTMGL1_003")
-samples = ee.FeatureCollection("projects/ee-abnatcap/assets/sargassum/samples20190507_allbands")
-classes = ee.FeatureCollection("projects/ee-abnatcap/assets/sargassum/trainingsites20190507")
+samples = ee.FeatureCollection(asset_location + "samples_S2sr_20190507_allbands") # Surface Reflectance
+# samples = ee.FeatureCollection(asset_location + "samples_S2toa_20190507_allbands")  # Top of Atmosphere
+classes = ee.FeatureCollection(asset_location + "trainingsites20190507")
 nearshore_mask = ee.FeatureCollection("projects/ee-abnatcap/assets/sargassum/S2_sargassum_mask")
+
+# Export Locations
+output_folder = 'sargassum/s2sr_classified_v2/'   # Surface Reflectance
+# output_folder = 's2toa_classified/'   # Top of Atmosphere
+
+# Image masking thresholds
+ndvi_threshold = 0.0
+elevation_threshold = 10
+swm_threshold = 1.4
 
 # ---- Bands & Indices
 # Relevant Bands B2=blue, B3=green, B4=red, B8=NIR, B11,B12=SWIR, QA60=cloud mask
@@ -103,10 +118,6 @@ print('Validation overall accuracy RF: ', testAccuracy.accuracy().getInfo())
 
 # ****************** SETUP VARIABLES  **************************************************
 image_dates = ['2019-02-26', '2019-04-02', '2019-05-07', '2019-06-26', '2019-09-14', '2019-11-18', '2019-12-03']
-image_dates = ['2019-02-26', '2019-04-02', '2019-05-07', '2019-06-26', '2019-09-14', '2019-11-18']
-image_dates = ['2019-02-26', '2019-05-07', '2019-06-26', '2019-09-14', '2019-11-18', '2019-12-03']
-
-# image_dates = ['2019-04-02']
 
 for dt in image_dates:
     # -- Dates
@@ -124,8 +135,6 @@ for dt in image_dates:
     # print('Year', image_year.getInfo())
     annual_startdate = ee.Date.fromYMD(image_year,1,1) #image_date.advance(-6,'month') -- S2_SR only goes back to 2018-12, so use the calendar year for now
     annual_enddate = ee.Date.fromYMD(image_year,12,31) #image_date.advance(6,'month');
-
-
 
     # Scale the Sentinel-2 Band values
     # https:#mygeoblog.com/2019/09/04/create-a-sentinel-2-for-your-province/
@@ -257,12 +266,12 @@ for dt in image_dates:
     # ******************** Sentinel-2 IMAGE Selection, Masking, & Calculations *****************************
 
     # --------------- Annual S-2 Collections ---------------------------------
-    s2sr = ee.ImageCollection('COPERNICUS/S2_SR') \
+    s2sr = ee.ImageCollection(s2_source) \
         .filterBounds(QR_multipoint) \
         .filterDate(annual_startdate, annual_enddate) \
         .select(S2bands)
 
-    s2Clouds = ee.ImageCollection('COPERNICUS/S2_CLOUD_PROBABILITY')\
+    s2Clouds = ee.ImageCollection(s2_clouds_source)\
         .filterBounds(QR_multipoint)  \
         .filterDate(annual_startdate, annual_enddate)
 
@@ -329,12 +338,12 @@ for dt in image_dates:
 
     # # Clip SRTM data to region and mask to elevations less than 10m
     srtmClip = SRTM.clip(QR_boundbox)
-    elevationMask = SRTM.lt(10)
+    elevationMask = SRTM.lt(elevation_threshold)
 
     def maskImage(image):
         # Use the NDVI and SWM to create image masks
-        NDVIMask = image.select('NDVI').gt(0)
-        SWMMask = image.select('SWM').lt(1.4)
+        NDVIMask = image.select('NDVI').gt(ndvi_threshold)
+        SWMMask = image.select('SWM').lt(swm_threshold)
         # Apply the NDVI, water, and elevation masks
         masked = (image
             .updateMask(NDVIMask)
@@ -455,24 +464,13 @@ for dt in image_dates:
     # Get User memory limit error when try to print these  or Export!
 
     # ******************** Export *****************************
-    output_folder = 'geeout/s2sr_classified/'
-    asset_location = 'projects/ee-abnatcap/assets/sargassum/'
 
     # Export the collection of classified image tiles
-    geemap.ee_export_image_collection_to_drive(merged_collection, folder=output_folder, scale=10)
-
-    # # Export the classified mosaic  To Drive
-    # output_image = 'classified_' + image_date.getInfo()
-    # task = ee.batch.Export.image.toDrive(image=mosaic,
-    #                                      description=output_image,
-    #                                      folder=output_folder,
-    #                                      scale=10,
-    #                                      region=QR_boundbox,
-    #                                      maxPixels=1.0E13)
-    # task.start()
+    # geemap.ee_export_image_collection_to_drive(merged_collection, folder=output_folder, scale=10)
 
     ## Export Classified / clipped mosaic to Asset
-    output_image = 'classclipped_' + image_date.getInfo()
+    output_image = 'classclipped_' + 'sr_' + image_date.getInfo()  # Surface Reflectance
+    # output_image = 'classclipped_' + 'toa_' + image_date.getInfo()  # Top of Atmosphere
     assetid = asset_location + output_image
     task = ee.batch.Export.image.toAsset(image=mosaic_nearshore,
                                          description=output_image,
