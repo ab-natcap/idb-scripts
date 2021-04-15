@@ -10,21 +10,21 @@ except Exception as e:
 import geemap
 
 # Image and cloud sources
-s2_source = 'COPERNICUS/S2_SR'  # Surface Reflectance
-# s2_source = 'COPERNICUS/S2'  # Top of Atmosphere
+# s2_source = 'COPERNICUS/S2_SR'  # Surface Reflectance
+s2_source = 'COPERNICUS/S2'  # Top of Atmosphere
 s2_clouds_source = 'COPERNICUS/S2_CLOUD_PROBABILITY'
 asset_location = 'projects/ee-abnatcap/assets/sargassum/'
 
 # Data sources (other than S2)
 SRTM = ee.Image("USGS/SRTMGL1_003")
-samples = ee.FeatureCollection(asset_location + "samples_S2sr_20190507_allbands") # Surface Reflectance
-# samples = ee.FeatureCollection(asset_location + "samples_S2toa_20190507_allbands")  # Top of Atmosphere
+# samples = ee.FeatureCollection(asset_location + "samples_S2sr_20190507_allbands") # Surface Reflectance
+samples = ee.FeatureCollection(asset_location + "samples_S2toa_20190507_allbands")  # Top of Atmosphere
 classes = ee.FeatureCollection(asset_location + "trainingsites20190507")
 nearshore_mask = ee.FeatureCollection("projects/ee-abnatcap/assets/sargassum/S2_sargassum_mask")
 
 # Export Locations
-output_folder = 'sargassum/s2sr_classified_v2/'   # Surface Reflectance
-# output_folder = 's2toa_classified/'   # Top of Atmosphere
+# output_folder = 'sargassum/s2sr_classified_v2/'   # Surface Reflectance
+output_folder = 's2toa_classified/'   # Top of Atmosphere
 
 # Image masking thresholds
 ndvi_threshold = 0.0
@@ -266,7 +266,7 @@ for dt in image_dates:
     # ******************** Sentinel-2 IMAGE Selection, Masking, & Calculations *****************************
 
     # --------------- Annual S-2 Collections ---------------------------------
-    s2sr = ee.ImageCollection(s2_source) \
+    s2 = ee.ImageCollection(s2_source) \
         .filterBounds(QR_multipoint) \
         .filterDate(annual_startdate, annual_enddate) \
         .select(S2bands)
@@ -277,23 +277,23 @@ for dt in image_dates:
 
     # Some outputs, like mosaic, end up with default projection - want to keep source
     # https:#developers.google.com/earth-engine/guides/projections#the-default-projection
-    source_projection = s2sr.first().select('B2').projection()
+    source_projection = s2.first().select('B2').projection()
     # print('Source Projection', source_projection)
 
     # Combine S2 with cloud probability by ID
-    s2sr_wCloudProb = s2sr.combine(s2Clouds)
-    # print('S2 Collection w/Cloud Prob:', s2sr_wCloudProb)
+    s2_wCloudProb = s2.combine(s2Clouds)
+    # print('S2 Collection w/Cloud Prob:', s2_wCloudProb)
 
     # Scale spectral bands and copy other bands to new image
-    s2sr_wCloudProb = s2sr_wCloudProb.map(scaleBands)
-    # print('Scaled', s2sr_wCloudProb)
+    s2_wCloudProb = s2_wCloudProb.map(scaleBands)
+    # print('Scaled', s2_wCloudProb)
 
     # Calculate Indices for all images
-    s2sr_wCloudProb = s2sr_wCloudProb.map(addIndices)
-    # print('S2 Collection Annual: ', s2sr_wCloudProb)
+    s2_wCloudProb = s2_wCloudProb.map(addIndices)
+    # print('S2 Collection Annual: ', s2_wCloudProb)
 
     # Mask Clouds
-    s2CloudMasked = ee.ImageCollection(s2sr_wCloudProb).map(maskCloudsProb)
+    s2CloudMasked = ee.ImageCollection(s2_wCloudProb).map(maskCloudsProb)
     s2CloudMasked = s2CloudMasked.map(maskCloudsQA)
 
     # Images that show where clouds were masked - set to -1 value
@@ -360,10 +360,10 @@ for dt in image_dates:
     # ******************** Select Single Date  *****************************
 
     #  Image Collections from a single date
-    s2sr_1date = s2sr_wCloudProb.filterDate(image_date, image_date.advance(1, 'day'))
-    s2sr_cloudmasked_1date = s2CloudMasked.filterDate(image_date, image_date.advance(1, 'day'))
-    s2sr_allmasked_1date = s2AllMasked.filterDate(image_date, image_date.advance(1, 'day'))
-    s2sr_clouds_1date = s2CloudsOnly.filterDate(image_date, image_date.advance(1, 'day'))
+    s2_1date = s2_wCloudProb.filterDate(image_date, image_date.advance(1, 'day'))
+    s2_cloudmasked_1date = s2CloudMasked.filterDate(image_date, image_date.advance(1, 'day'))
+    s2_allmasked_1date = s2AllMasked.filterDate(image_date, image_date.advance(1, 'day'))
+    s2_clouds_1date = s2CloudsOnly.filterDate(image_date, image_date.advance(1, 'day'))
     # print('Cloud Masked Image Collection for ' + image_date_string, s2sr_cloudmasked_1date.first().getInfo())
 
     # *********************** CLASSIFICATION ************************************
@@ -382,7 +382,7 @@ for dt in image_dates:
         return classed
 
     print('Classifying image.......')
-    classified_collection = s2sr_allmasked_1date.map(classifyImage)
+    classified_collection = s2_allmasked_1date.map(classifyImage)
     classed = classified_collection.mosaic()
     # print("Classified Sargassum Collection", classified_collection.getInfo())
 
@@ -392,14 +392,14 @@ for dt in image_dates:
     def getClassedArea(image):
         return image.select(['B2'],['classed_area']).gte(0)
 
-    classed_area_collection = s2sr_allmasked_1date.map(getClassedArea)
+    classed_area_collection = s2_allmasked_1date.map(getClassedArea)
     # print('Classified Area', classed_area_collection.first().getInfo())
     # print('Clouds only', s2sr_clouds_1date.first().getInfo())
 
     # Merge sargassum, classified area, and clouds into single collection using ID
     # combined_collection = classified_collection.combine(s2sr_clouds_1date).combine(classed_area_collection)
     print('Combining collections....')
-    combined_collection = s2sr_clouds_1date.combine(classified_collection).combine(classed_area_collection)
+    combined_collection = s2_clouds_1date.combine(classified_collection).combine(classed_area_collection)
     print('Combined', combined_collection.first().getInfo())
 
     # Merge  individual bands (presence/absence/no data) into a single band (sargassum)
@@ -466,19 +466,19 @@ for dt in image_dates:
     # ******************** Export *****************************
 
     # Export the collection of classified image tiles
-    # geemap.ee_export_image_collection_to_drive(merged_collection, folder=output_folder, scale=10)
+    geemap.ee_export_image_collection_to_drive(merged_collection, folder=output_folder, scale=10)
 
-    ## Export Classified / clipped mosaic to Asset
-    output_image = 'classclipped_' + 'sr_' + image_date.getInfo()  # Surface Reflectance
+    # ## Export Classified / clipped mosaic to Asset
+    # # output_image = 'classclipped_' + 'sr_' + image_date.getInfo()  # Surface Reflectance
     # output_image = 'classclipped_' + 'toa_' + image_date.getInfo()  # Top of Atmosphere
-    assetid = asset_location + output_image
-    task = ee.batch.Export.image.toAsset(image=mosaic_nearshore,
-                                         description=output_image,
-                                         assetId=assetid,
-                                         scale=10,
-                                         region=QR_boundbox,
-                                         maxPixels=1.0E13)
-    task.start()
+    # assetid = asset_location + output_image
+    # task = ee.batch.Export.image.toAsset(image=mosaic_nearshore,
+    #                                      description=output_image,
+    #                                      assetId=assetid,
+    #                                      scale=10,
+    #                                      region=QR_boundbox,
+    #                                      maxPixels=1.0E13)
+    # task.start()
 
     # # Export the classified clipped mosaic to Drive
     # output_image = 'classclipped_' + image_date.getInfo()

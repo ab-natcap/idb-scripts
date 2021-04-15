@@ -13,7 +13,7 @@ import subprocess
 from multiprocessing import Pool
 from timeit import default_timer as timer
 
-input_dir = r'/Users/arbailey/Google Drive/My Drive/sargassum/s2sr_classified'
+input_dir = r'/Users/arbailey/Google Drive/My Drive/sargassum/s2toa_classified'
 
 gdal_nodata_command = 'gdal_edit.py -a_nodata -9999 {classed_tile}'
 
@@ -52,8 +52,8 @@ if __name__ == '__main__':
     ##--- Add No Data value to TIF files
     # Multiprocess addition of No Data Value - 5 seconds
     # start = timer()
-    # p = Pool(4)
-    # p.map(add_nodata, files)
+    p = Pool(4)
+    p.map(add_nodata, files)
     # end = timer()
     # print(end - start)
     # Single Process - 20 seconds
