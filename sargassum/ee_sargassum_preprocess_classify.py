@@ -19,7 +19,7 @@ asset_location = 'projects/ee-abnatcap/assets/sargassum/'
 SRTM = ee.Image("USGS/SRTMGL1_003")
 # samples = ee.FeatureCollection(asset_location + "samples_S2sr_20190507_allbands") # Surface Reflectance
 samples = ee.FeatureCollection(asset_location + "samples_S2toa_20190507_allbands")  # Top of Atmosphere
-classes = ee.FeatureCollection(asset_location + "trainingsites20190507")
+# classes = ee.FeatureCollection(asset_location + "trainingsites20190507")
 nearshore_mask = ee.FeatureCollection("projects/ee-abnatcap/assets/sargassum/S2_sargassum_mask")
 
 # Export Locations
@@ -117,7 +117,24 @@ print('Validation error matrix RF: ', testAccuracy.getInfo())
 print('Validation overall accuracy RF: ', testAccuracy.accuracy().getInfo())
 
 # ****************** SETUP VARIABLES  **************************************************
-image_dates = ['2019-02-26', '2019-04-02', '2019-05-07', '2019-06-26', '2019-09-14', '2019-11-18', '2019-12-03']
+# Test dates
+# image_dates = ['2019-02-26', '2019-04-02', '2019-05-07', '2019-06-26', '2019-09-14', '2019-11-18', '2019-12-03']  # Test Dates
+# 2019
+# image_dates = ['2019-01-12','2019-02-06','2019-02-16','2019-02-26','2019-03-03','2019-03-08','2019-03-23','2019-03-28',
+#                '2019-04-02','2019-04-07','2019-04-17','2019-04-22','2019-05-12','2019-05-22','2019-05-27','2019-06-06',
+#                '2019-06-26','2019-07-06','2019-07-26','2019-09-04','2019-09-19','2019-09-24','2019-10-24','2019-11-08',
+#                '2019-11-18','2019-11-23','2019-12-03','2019-12-23','2019-12-28']
+# 2018
+# image_dates = ['2018-01-12','2018-02-06','2018-02-11','2018-02-16','2018-02-21','2018-03-03','2018-03-23','2018-04-02',
+#                '2018-04-17','2018-04-22','2018-05-02','2018-05-27','2018-06-06','2018-06-11','2018-06-21','2018-07-11',
+#                '2018-07-21','2018-07-26','2018-08-05','2018-08-15','2018-08-25','2018-08-30','2018-09-14','2018-09-29',
+#                '2018-10-14','2018-11-13','2018-12-03']
+# 2017
+# image_dates = ['2017-03-23','2017-05-02','2017-05-22','2017-09-19','2017-10-09','2017-11-23','2017-12-08','2017-12-13','2017-12-23','2017-12-28']
+# 2016
+# image_dates = ['2016-04-27','2016-05-07','2016-06-16','2016-10-14','2016-12-03','2016-12-23']
+# 2015
+image_dates = ['2015-11-19','2015-11-29']
 
 for dt in image_dates:
     # -- Dates
@@ -133,6 +150,8 @@ for dt in image_dates:
     # Start and end dates for Annual Summary calcs
     image_year = image_date.get('year')
     # print('Year', image_year.getInfo())
+    if image_year == 2015:
+        image_year = 2016 # don't have a full year of 2015 images, so just use 2016 to compare
     annual_startdate = ee.Date.fromYMD(image_year,1,1) #image_date.advance(-6,'month') -- S2_SR only goes back to 2018-12, so use the calendar year for now
     annual_enddate = ee.Date.fromYMD(image_year,12,31) #image_date.advance(6,'month');
 
@@ -432,19 +451,19 @@ for dt in image_dates:
     print('Merged', merged_collection.first().getInfo())
     print('Merged size', merged_collection.size().getInfo())
 
-    # Single date mosaic
-    print('Mosaicking collection....')
-    image_date = merged_collection.first().get('image_date')
-    image_prj = merged_collection.first().select('sargassum').projection()
-    # print(image_date.getInfo())
-    mosaic = merged_collection.mosaic().setDefaultProjection(image_prj).set('image_date', image_date)
-    # print(mosaic.getInfo())
-    # Clip mosaic to nearshore mask
-    print('Clipping mosaic.....')
-    # Already clipped individual images with nearshore mask, so don't need to do it here anymore
-    # mosaic_nearshore = mosaic.clipToCollection(nearshore_mask) #.setDefaultProjection(image_prj)
-    mosaic_nearshore = mosaic
-    print(mosaic_nearshore.getInfo())
+    # # Single date mosaic  --- ONly need this for Accuracy Assessment
+    # print('Mosaicking collection....')
+    # image_date = merged_collection.first().get('image_date')
+    # image_prj = merged_collection.first().select('sargassum').projection()
+    # # print(image_date.getInfo())
+    # mosaic = merged_collection.mosaic().setDefaultProjection(image_prj).set('image_date', image_date)
+    # # print(mosaic.getInfo())
+    # # Clip mosaic to nearshore mask
+    # print('Clipping mosaic.....')
+    # # Already clipped individual images with nearshore mask, so don't need to do it here anymore
+    # # mosaic_nearshore = mosaic.clipToCollection(nearshore_mask) #.setDefaultProjection(image_prj)
+    # mosaic_nearshore = mosaic
+    # print(mosaic_nearshore.getInfo())
 
     # print(nearshore_mask.geometry().getInfo())
 
