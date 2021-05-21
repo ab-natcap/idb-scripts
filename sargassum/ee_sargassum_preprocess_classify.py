@@ -18,13 +18,18 @@ asset_location = 'projects/ee-abnatcap/assets/sargassum/'
 # Data sources (other than S2)
 SRTM = ee.Image("USGS/SRTMGL1_003")
 # samples = ee.FeatureCollection(asset_location + "samples_S2sr_20190507_allbands") # Surface Reflectance
-samples = ee.FeatureCollection(asset_location + "samples_S2toa_20190507_allbands")  # Top of Atmosphere
+# samples = ee.FeatureCollection(asset_location + "samples20190507_16QDH_allbands") # Surface Reflectance
+# samples = ee.FeatureCollection(asset_location + "samples_S2toa_20190507_allbands")  # Top of Atmosphere v1
+# samples = ee.FeatureCollection(asset_location + "samples_S2toa_20190507_allbands_v2")  # Top of Atmosphere v2
+samples = ee.FeatureCollection(asset_location + "samples_S2toa_20190507_allbands_v3")  # Top of Atmosphere v3
+
 # classes = ee.FeatureCollection(asset_location + "trainingsites20190507")
 nearshore_mask = ee.FeatureCollection("projects/ee-abnatcap/assets/sargassum/S2_sargassum_mask")
 
 # Export Locations
-# output_folder = 'sargassum/s2sr_classified_v2/'   # Surface Reflectance
-output_folder = 's2toa_classified/'   # Top of Atmosphere
+# output_folder = 's2sr_classified'   # Surface Reflectance
+# output_folder = 's2toa_classified_v1'   # Top of Atmosphere v1
+output_folder = 's2toa_classified_v3'   # Top of Atmosphere v3
 
 # Image masking thresholds
 ndvi_threshold = 0.0
@@ -118,27 +123,33 @@ print('Validation overall accuracy RF: ', testAccuracy.accuracy().getInfo())
 
 # ****************** SETUP VARIABLES  **************************************************
 # Test dates
-# image_dates = ['2019-02-26', '2019-04-02', '2019-05-07', '2019-06-26', '2019-09-14', '2019-11-18', '2019-12-03']  # Test Dates
+# image_dates_test = ['2019-02-26', '2019-04-02', '2019-05-07', '2019-06-26', '2019-09-14', '2019-11-18', '2019-12-03']  # Test Dates
+
+# < 30% cloudy pixel coverage
 # 2019
-# image_dates = ['2019-01-12','2019-02-06','2019-02-16','2019-02-26','2019-03-03','2019-03-08','2019-03-23','2019-03-28',
+# image_dates_2019 = ['2019-01-12','2019-02-06','2019-02-16','2019-02-26','2019-03-03','2019-03-08','2019-03-23','2019-03-28',
 #                '2019-04-02','2019-04-07','2019-04-17','2019-04-22','2019-05-12','2019-05-22','2019-05-27','2019-06-06',
 #                '2019-06-26','2019-07-06','2019-07-26','2019-09-04','2019-09-19','2019-09-24','2019-10-24','2019-11-08',
-#                '2019-11-18','2019-11-23','2019-12-03','2019-12-23','2019-12-28']
+#                '2019-11-18','2019-11-23','2019-12-03','2019-12-23','2019-12-28','2019-05-07', '2019-09-14']
 # 2018
-# image_dates = ['2018-01-12','2018-02-06','2018-02-11','2018-02-16','2018-02-21','2018-03-03','2018-03-23','2018-04-02',
+# image_dates_2018 = ['2018-01-12','2018-02-06','2018-02-11','2018-02-16','2018-02-21','2018-03-03','2018-03-23','2018-04-02',
 #                '2018-04-17','2018-04-22','2018-05-02','2018-05-27','2018-06-06','2018-06-11','2018-06-21','2018-07-11',
 #                '2018-07-21','2018-07-26','2018-08-05','2018-08-15','2018-08-25','2018-08-30','2018-09-14','2018-09-29',
 #                '2018-10-14','2018-11-13','2018-12-03']
 # 2017
-# image_dates = ['2017-03-23','2017-05-02','2017-05-22','2017-09-19','2017-10-09','2017-11-23','2017-12-08','2017-12-13','2017-12-23','2017-12-28']
+# image_dates_2017 = ['2017-03-23','2017-05-02','2017-05-22','2017-09-19','2017-10-09','2017-11-23','2017-12-08','2017-12-13','2017-12-23','2017-12-28']
 # 2016
-# image_dates = ['2016-04-27','2016-05-07','2016-06-16','2016-10-14','2016-12-03','2016-12-23']
+# image_dates_2016 = ['2016-04-27','2016-05-07','2016-06-16','2016-10-14','2016-12-03','2016-12-23']
 # 2015
-image_dates = ['2015-11-19','2015-11-29']
+# image_dates_2015 = ['2015-11-19','2015-11-29']
+
+# All dates with < 30% cloudy pixel coverage for at least 5 of the 6 Sentinel-2 image tiles
+image_dates_all = ["2015-11-19","2015-11-29", "2016-04-27", "2016-05-07", "2016-06-16", "2016-10-14", "2016-12-03", "2016-12-23", "2017-01-12", "2017-02-01", "2017-02-21", "2017-03-03", "2017-03-23", "2017-05-02", "2017-05-22", "2017-07-01", "2017-08-10", "2017-09-19", "2017-09-24", "2017-10-09", "2017-10-29", "2017-11-23", "2017-12-08", "2017-12-13", "2017-12-23", "2017-12-28", "2018-01-12", "2018-02-01", "2018-02-06", "2018-02-11", "2018-02-16", "2018-02-21", "2018-02-26", "2018-03-03", "2018-03-18", "2018-03-23", "2018-03-28", "2018-04-02", "2018-04-07", "2018-04-17", "2018-04-22", "2018-05-02", "2018-05-07", "2018-05-27", "2018-06-06", "2018-06-11", "2018-06-21", "2018-07-01", "2018-07-11", "2018-07-16", "2018-07-21", "2018-07-26", "2018-07-31", "2018-08-05", "2018-08-15", "2018-08-25", "2018-08-30", "2018-09-14", "2018-09-29", "2018-10-14", "2018-10-24", "2018-11-13", "2018-11-18", "2018-11-23", "2018-12-03", "2018-12-08", "2019-01-12", "2019-02-06", "2019-02-11", "2019-02-16", "2019-02-26", "2019-03-03", "2019-03-08", "2019-03-13", "2019-03-23", "2019-03-28", "2019-04-02", "2019-04-07", "2019-04-12", "2019-04-17", "2019-04-22", "2019-05-07", "2019-05-12", "2019-05-22", "2019-05-27", "2019-06-06", "2019-06-11", "2019-06-21", "2019-06-26", "2019-07-06", "2019-07-26", "2019-08-05", "2019-08-10", "2019-08-25", "2019-09-04", "2019-09-14", "2019-09-19", "2019-09-24", "2019-09-29", "2019-10-14", "2019-10-24", "2019-11-08", "2019-11-18", "2019-11-23", "2019-12-03", "2019-12-23", "2019-12-28"]
+# Dates from this set that are supplemental to the dates already run
+image_dates = ['2017-01-12', '2017-02-01', '2017-02-21', '2017-03-03', '2017-07-01', '2017-08-10', '2017-09-24', '2017-10-29', '2018-02-01', '2018-02-26', '2018-03-18', '2018-03-28', '2018-04-07', '2018-05-07', '2018-07-01', '2018-07-16', '2018-07-31', '2018-10-24', '2018-11-18', '2018-11-23', '2018-12-08', '2019-02-11', '2019-03-13', '2019-04-12', '2019-05-07', '2019-06-11', '2019-06-21', '2019-08-05', '2019-08-10', '2019-08-25', '2019-09-14', '2019-09-29', '2019-10-14']
 
 for dt in image_dates:
     # -- Dates
-    # 2019-02-26, 2019-04-02, 2019-05-07, 2019-06-26, 2019-09-14, 2019-11-18, 2019-12-03
     # image_date = ee.Date('2019-05-07')  # Date of Sentinel-2 image to be trained & classified
     image_date = ee.Date(dt)  # Date of Sentinel-2 image to be classified
 
@@ -459,7 +470,7 @@ for dt in image_dates:
     # mosaic = merged_collection.mosaic().setDefaultProjection(image_prj).set('image_date', image_date)
     # # print(mosaic.getInfo())
     # # Clip mosaic to nearshore mask
-    # print('Clipping mosaic.....')
+    # # print('Clipping mosaic.....')
     # # Already clipped individual images with nearshore mask, so don't need to do it here anymore
     # # mosaic_nearshore = mosaic.clipToCollection(nearshore_mask) #.setDefaultProjection(image_prj)
     # mosaic_nearshore = mosaic
@@ -467,7 +478,7 @@ for dt in image_dates:
 
     # print(nearshore_mask.geometry().getInfo())
 
-    # ## Accuracy Assessment Random Samples
+    # ## Accuracy Assessment Random Samples  -- this is now down in ee_sargassum_aa.py7
     # print('Creating AA points..')
     # aaPoints = mosaic_nearshore.stratifiedSample(
     #     numPoints=100,
@@ -487,9 +498,9 @@ for dt in image_dates:
     # Export the collection of classified image tiles
     geemap.ee_export_image_collection_to_drive(merged_collection, folder=output_folder, scale=10)
 
-    # ## Export Classified / clipped mosaic to Asset
-    # # output_image = 'classclipped_' + 'sr_' + image_date.getInfo()  # Surface Reflectance
-    # output_image = 'classclipped_' + 'toa_' + image_date.getInfo()  # Top of Atmosphere
+    ## Export Classified / clipped mosaic to Asset
+    # output_image = 'classclipped_' + 'sr_' + image_date.getInfo()  # Surface Reflectance
+    # # output_image = 'classclipped_' + 'toa_' + image_date.getInfo() + '_v3'  # Top of Atmosphere
     # assetid = asset_location + output_image
     # task = ee.batch.Export.image.toAsset(image=mosaic_nearshore,
     #                                      description=output_image,
