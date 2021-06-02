@@ -50,11 +50,11 @@ def mosaic2vrt_nd0(prefix):
     # Version of VRT without a No Data value (-9999 shows as value)
     os.system('gdalbuildvrt -overwrite ' + outfile + " " + infiles)
     print(outfile)
-    # # Recalc the -9999 value to 0
+    # # Recalc the -9999 value to 0  -- Not using this part
     # # https://spatialthoughts.com/2019/12/28/gdal-calc/
     # outfile2 = prefix + '_mosaic_nd0.vrt'
     # os.system('gdal_calc.py -A ' + outfile2 + '--calc="(A<-1)*0 + (A>=-1)*1" --outfile ' + outfile1)
-    # os.chdir(start_dir)
+    os.chdir(start_dir)
 
 
 if __name__ == '__main__':
@@ -70,19 +70,19 @@ if __name__ == '__main__':
             prefixes.append(prefix)
     print(prefixes)
 
-    ##--- Add No Data value to TIF files
-    p = Pool(4)
-    p.map(add_nodata, files)
-    ##-- Create VRT mosaics from single date classifications
-    p = Pool(4)
-    p.map(mosaic2vrt, prefixes)
+    # ##--- Add No Data value to TIF files
+    # p = Pool(4)
+    # p.map(add_nodata, files)
+    # ##-- Create VRT mosaics from single date classifications
+    # p = Pool(4)
+    # p.map(mosaic2vrt, prefixes)
 
-    # ## -- Create VRT mosaics with -9999 no data replaced with 0
-    # ##--- REmove no data value so -9999 are visible
-    # ## -- Decided to do this in Pandas before export, but may need later
-    # p = Pool(4)
-    # p.map(remove_nodata, files)
-    # # ##-- Create VRT mosaics from single date classifications (without no data
-    # p = Pool(4)
-    # p.map(mosaic2vrt_nd0, prefixes)
+    ## -- Create VRT mosaics with -9999 no data replaced with 0
+    ##--- REmove no data value so -9999 are visible
+    ## -- Decided to do this in Pandas before export, but may need later
+    p = Pool(4)
+    p.map(remove_nodata, files)
+    # ##-- Create VRT mosaics from single date classifications (without no data
+    p = Pool(4)
+    p.map(mosaic2vrt_nd0, prefixes)
 
