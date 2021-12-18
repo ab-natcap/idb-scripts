@@ -1,3 +1,11 @@
+""" qgis_ee_shorelinemask.py
+
+Author: Allison Bailey
+Date: 2021-03-22
+
+This script is for use in QGIS to display false color S-2 image mosaics from GEE
+"""
+
 import ee
 from ee_plugin import Map
 
