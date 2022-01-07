@@ -15,6 +15,8 @@ import numpy as np
 import pygeoprocessing as pygeo
 from osgeo import gdal
 import time
+import rasterio as rio
+
 
 
 def persist_rxr():
@@ -92,6 +94,7 @@ def persist_rxr():
 
 
 def persist_pygeo():
+    # Create Sargassum Persistence Raster from individual dates classified as presence (1), absence (0) or no data (-1)
     start_time = time.time()
     source_dir = '/Users/arbailey/Google Drive/My Drive/sargassum/s2toa_classified_v1'
     out_dir = '/Users/arbailey/Google Drive/My Drive/sargassum/paper2022/data/source/s2qr_sargassum' # Remote
@@ -106,7 +109,6 @@ def persist_pygeo():
     # in_rasters = [os.path.basename(r) for r in in_rasters_path]
     print(len(in_rasters_path), " rasters to reclassify")
 
-
     # Value map for reclassifying input rasters
     sargassum_vm = {
         -9999: 0,
@@ -115,15 +117,26 @@ def persist_pygeo():
         1: 1
     }
 
+    # Reclassifiy the original rasters
+    reclassed_rasters = []
     for in_path in in_rasters_path:
         in_raster_noext = os.path.splitext(os.path.basename(in_path))[0]
         image_date = in_raster_noext.split("_")[0]
         out_raster = f"s2qr_{image_date}_sargassum.tif"
         reclass_path = os.path.join(out_dir,out_raster)
+        reclassed_rasters.append(reclass_path)
 
-        raster_reclass(in_path,reclass_path,sargassum_vm)
+        # raster_reclass(in_path,reclass_path,sargassum_vm)
+
+    print(reclassed_rasters)
+
+
+
+    # Sum the reclassified rasters
+    sum_rasters(reclassed_rasters)
 
     print('ran in %.2fs' % (time.time() - start_time))
+
 
 def raster_reclass(source_path, reclassed_path, value_map):
     """
@@ -141,6 +154,48 @@ def raster_reclass(source_path, reclassed_path, value_map):
                                           target_datatype=gdal.GDT_Int16,
                                           target_nodata=-1,
                                           )
+
+
+
+def sum_rasters(rasters):
+    """
+    :param rasters: input list of rasters with full path
+    :return:
+    """
+    for i, r in enumerate(rasters):
+        print(os.path.basename(r))
+        # Open the raster and squeeze into two dimensions (ignore "band dimension which is 1)
+        # https://corteva.github.io/rioxarray/stable/getting_started/nodata_management.html#
+        classed = rxr.open_rasterio(r, masked=True).squeeze()  # squeeze removes the "band" dimension (which is 1)
+        if i == 0:
+            summed = classed
+            print("The CRS for this data is:", summed.rio.crs)
+            print("The spatial extent of this data is: ", summed.rio.bounds())
+            print("The shape of this data is:", summed.shape)
+            print("The no data value is:", summed.rio.nodata)
+            print("The encoded no data value is:", summed.rio.encoded_nodata)
+            print("the minimum raster value is: ", np.nanmin(summed.values))
+            print("the maximum raster value is: ", np.nanmax(summed.values))
+        else:
+            # https://corteva.github.io/rioxarray/stable/examples/reproject_match.html#Raster-Calculations
+            try:
+                summed += classed
+            except: # xr.MergeError:
+                # if problem merging due to unaligned rasters, do reproject match
+                print("Doing projection match")
+                print("The CRS for input data is:", classed.rio.crs)
+                print("The spatial extent of input data is: ", classed.rio.bounds())
+                print("The shape of input data is:", classed.shape)
+                classed_reprjmatch = classed.rio.reproject_match(summed)
+                summed += classed_reprjmatch
+
+    print("The CRS for this data is:", summed.rio.crs)
+    print("The spatial extent of this data is: ", summed.rio.bounds())
+    print("The shape of this data is:", summed.shape)
+    print("The no data value is:", summed.rio.nodata)
+    print("The encoded no data value is:", summed.rio.encoded_nodata)
+    print("the minimum raster value is: ", np.nanmin(summed.values))
+    print("the maximum raster value is: ", np.nanmax(summed.values))
 
 
 
