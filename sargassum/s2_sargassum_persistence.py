@@ -5,6 +5,12 @@ Date: 2021-12-17
 
 Generate Rasters that show the persistence of sargassum across dates
 
+A bunch of these functions were experimental and did not necessarily work
+
+Instead, did the preliminary alignment and reclassification in reclass_summ_and_nodata_count.py
+
+Actual workflow replaced by s2_sargassum_metrics.py
+
 """
 
 import os
@@ -15,9 +21,9 @@ import numpy as np
 import pygeoprocessing as pygeo
 from osgeo import gdal
 import time
-import rasterio as rio
 
-
+TARGET_NODATA = -1
+TARGET_DATATYPE = gdal.GDT_Int16
 
 def persist_rxr():
     # Raster source directory and data
@@ -156,7 +162,6 @@ def raster_reclass(source_path, reclassed_path, value_map):
                                           )
 
 
-
 def sum_rasters(rasters):
     """
     :param rasters: input list of rasters with full path
@@ -198,14 +203,144 @@ def sum_rasters(rasters):
     print("the maximum raster value is: ", np.nanmax(summed.values))
 
 
+def subset_list_by_daterange(in_raster_path_list, startdate, enddate):
+    """
+    Subset the list of rasters in the input directory for a specific date range
+
+    :param in_raster_path_list:
+    :param startdate:
+    :param enddate:
+    :return: out_raster_path_list
+    """
+
+    # Sort the list and then get the indices for the start and end dates to slice the list
+    in_raster_path_list.sort()
+    startindex = [i for i,path in enumerate(in_raster_path_list) if startdate in path][0]
+    endindex = [i for i,path in enumerate(in_raster_path_list) if enddate in path][0] + 1
+    out_raster_path_list = in_raster_path_list[startindex:endindex]
+
+    # Print input dates and output list length for QC
+    print(f'Date Start: {startdate}  Date End: {enddate}')
+    print(f"Number of subset rasters: {len(out_raster_path_list)}")
+
+    return out_raster_path_list
+
+
+def calc_persist(in_path_list, out_dir, startdate='20151119', enddate='20191228'):
+    """ Calculate a single persistence raster, based on a list of rasters with the following classification
+        Sargassum present: 1
+        Sargassum absent: 0
+        no data: -1
+            Args:
+                raster_path_list (list): list of strings of raster file paths to sum
+                out_dir (string): directory location on disk to save sum raster
+            Returns:
+                sum_raster_path (string):  full path to sum raster
+            """
+    # Subset the raster list to match the date range
+    subset_path_list = subset_list_by_daterange(in_path_list, startdate, enddate)
+    # print(subset_path_list)
+
+    # Calculate a per-pixel sum of sargassum presence/absence across time series
+    sum_raster_path = os.path.join(out_dir, f'sargassum_presentcnt_by_pixel_{startdate}_{enddate}.tif')
+    sum_by_pixel(subset_path_list, sum_raster_path)
+    print("Sum Raster: ", sum_raster_path)
+
+    # Calculate a per-pixel count of no data occurrences
+    nodata_count_raster_path = os.path.join(out_dir, f'nodata_count_by_pixel_{startdate}_{enddate}.tif')
+    nodata_count_by_pixel(subset_path_list, nodata_count_raster_path)
+    print("No Data Raster: ", nodata_count_raster_path)
+
+
+def sum_by_pixel(raster_path_list, sum_raster_path):
+    """Pixel sum the rasters treating nodata values as zero.
+        Args:
+            raster_path_list (list): list of strings of raster file paths to sum
+            sum_raster_path (string):  full path to sum raster
+        Returns:
+            Nothing
+        """
+
+    def sum_op(*arrays):
+        """Computes the per pixel sum of the arrays.
+        This operation treats nodata values as 0.
+        Args:
+            *arrays (list): a list of numpy arrays
+        Returns:
+            Per pixel sums.
+        """
+        sum_result = np.full(arrays[0].shape, 0, dtype=numpy.int16)
+        for array in arrays:
+            valid_mask = ~np.isclose(array, TARGET_NODATA)
+            sum_result[valid_mask] = sum_result[valid_mask] + array[valid_mask]
+
+        return np.where(sum_result == 0, TARGET_NODATA, sum_result)
+
+    # raster calculate expects a list of (raster_path, band) tuples
+    raster_path_band_list = [(raster_path, 1) for raster_path in raster_path_list]
+    # pygeo.raster_calculator(
+    #     raster_path_band_list, sum_op, sum_raster_path, TARGET_DATATYPE,
+    #     TARGET_NODATA)
+
+
+
+def nodata_count_by_pixel(raster_path_list, nodata_count_raster_path):
+    """A nodata pixel count of rasters.
+    Args:
+        raster_path_list (list): list of strings of raster file paths
+        out_dir (string): directory location on disk to save raster
+    Returns:
+        Nothing
+    """
+
+
+    def nodata_count_op(*arrays):
+        """Computes the nodata count per pixel of the arrays.
+        Args:
+            *arrays (list): a list of numpy arrays
+        Returns:
+            Nodata counts.
+        """
+        nodata_count_result = numpy.full(arrays[0].shape, 0, dtype=numpy.int16)
+        for array in arrays:
+            nodata_mask = numpy.isclose(array, TARGET_NODATA)
+            nodata_count_result[nodata_mask] = nodata_count_result[nodata_mask] + 1
+
+        return numpy.where(
+            nodata_count_result == 0, TARGET_NODATA, nodata_count_result)
+
+    # raster calculate expects a list of (raster_path, band) tuples
+    raster_path_band_list = [(raster_path, 1) for raster_path in raster_path_list]
+    # pygeo.raster_calculator(
+    #     raster_path_band_list, nodata_count_op, nodata_count_raster_path,
+    #     TARGET_DATATYPE, TARGET_NODATA)
+
+
 
 if __name__ == '__main__':
 
     # Run Persistence Calcs with Rioxarray approach   -- ran out of memory
     # persist_rxr(rasters)
 
-    # Run Persistence Calcs with Pygeoprocessing approach
-    persist_pygeo()
+    # Run Persistence Calcs with Pygeoprocessing approach # -- did most of this in reclass_sum_and_nodata_count.py script
+    # persist_pygeo()
+
+
+    # setup directories
+    remote_base_dir = '/Users/arbailey/Google Drive/My Drive/sargassum/paper2022/data/source/s2qr_sargassum' # Remote
+    local_base_dir = '/Users/arbailey/natcap/idb/data/work/sargassum/s2qr_sargassum'  # Local
+    # base_dir = os.path.join('Users', 'arbailey', 'natcap', 'idb', 'data', 'work', 'sargassum', 's2qr_sargassum')
+    base_dir = remote_base_dir
+    source_dir = os.path.join(base_dir, 'mosaics_by_date')
+    out_dir = base_dir
+
+    # collect the raster paths from the source directory
+    raster_path_list = [r for r in glob.glob(os.path.join(source_dir, "s2qr_*sargassum.tif"))]
+    # print(raster_path_list)
+    print(f"Number of source rasters: {len(raster_path_list)}")
+
+    # Persistence 2016 - 2019
+    calc_persist(raster_path_list, out_dir, '20160427', '20191228')
 
 
 
