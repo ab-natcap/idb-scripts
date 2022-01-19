@@ -259,7 +259,7 @@ def area_by_segment(occur_raster, gpkg, segment_layer, area_layer):
     print(occur_gdf.columns)
     # print(persist_gdf.head())
     occur_gdf.set_crs(segment_polys.crs, inplace=True)
-    # Colculate
+    # Export to geopackage layer
     occur_gdf.to_file(gpkg, layer=area_layer, driver="GPKG")
 
 
