@@ -11,7 +11,7 @@ import geemap
 
 # Image and cloud sources
 # s2_source = 'COPERNICUS/S2_SR'  # Surface Reflectance
-s2_source = 'COPERNICUS/S2'  # Top of Atmosphere
+s2_source = 'COPERNICUS/S2'  # Top of Atmosphere -- used for final classification
 s2_clouds_source = 'COPERNICUS/S2_CLOUD_PROBABILITY'
 asset_location = 'projects/ee-abnatcap/assets/sargassum/'
 
@@ -19,7 +19,7 @@ asset_location = 'projects/ee-abnatcap/assets/sargassum/'
 SRTM = ee.Image("USGS/SRTMGL1_003")
 # samples = ee.FeatureCollection(asset_location + "samples_S2sr_20190507_allbands") # Surface Reflectance
 # samples = ee.FeatureCollection(asset_location + "samples20190507_16QDH_allbands") # Surface Reflectance
-samples = ee.FeatureCollection(asset_location + "samples_S2toa_20190507_allbands")  # Top of Atmosphere v1
+samples = ee.FeatureCollection(asset_location + "samples_S2toa_20190507_allbands")  # Top of Atmosphere v1 -- used for final classification
 # samples = ee.FeatureCollection(asset_location + "samples_S2toa_20190507_allbands_v2")  # Top of Atmosphere v2
 # samples = ee.FeatureCollection(asset_location + "samples_S2toa_20190507_allbands_v3")  # Top of Atmosphere v3
 
@@ -28,7 +28,7 @@ nearshore_mask = ee.FeatureCollection("projects/ee-abnatcap/assets/sargassum/S2_
 
 # Export Locations
 # output_folder = 's2sr_classified'   # Surface Reflectance
-output_folder = 's2toa_classified_v1'   # Top of Atmosphere v1
+output_folder = 's2toa_classified_v1'   # Top of Atmosphere v1 -- used for final classification
 # output_folder = 's2toa_classified_v3'   # Top of Atmosphere v3
 
 # Image masking thresholds
@@ -126,6 +126,23 @@ print('Validation overall accuracy RF: ', testAccuracy.accuracy().getInfo())
 # image_dates_test = ['2019-02-26', '2019-04-02', '2019-05-07', '2019-06-26', '2019-09-14', '2019-11-18', '2019-12-03']  # Test Dates
 
 # < 30% cloudy pixel coverage
+#2022
+image_dates_2022 = ['2022-01-01','2022-01-06','2022-01-26','2022-01-31','2022-02-20','2022-02-25','2022-03-02','2022-03-07',
+                    '2022-03-12','2022-03-17','2022-03-22','2022-03-27','2022-04-01','2022-04-06','2022-04-11','2022-04-16',
+                    '2022-05-06']
+
+#2021
+image_dates_2021 = ['2021-01-21','2021-01-26','2021-02-05','2021-02-10','2021-02-15','2021-02-25','2021-03-02','2021-03-07',
+                    '2021-03-17','2021-03-22','2021-03-27','2021-04-16','2021-05-26','2021-06-05','2021-07-05','2021-07-10',
+                    '2021-07-15','2021-07-20','2021-07-25','2021-08-04','2021-08-09','2021-08-14','2021-09-23','2021-10-13',
+                    '2021-10-28','2021-11-02','2021-11-07','2021-11-22','2021-11-27','2021-12-07','2021-12-12','2021-12-17',
+                    '2021-12-22']
+# 2020
+image_dates_2020 = ['2020-01-02','2020-01-12','2020-01-22','2020-01-27','2020-02-06','2020-02-11','2020-02-16','2020-02-21',
+                    '2020-02-26','2020-03-12','2020-03-17','2020-03-22','2020-03-27','2020-04-01','2020-04-06','2020-04-11',
+                    '2020-04-16','2020-04-21','2020-05-16','2020-05-21','2020-06-10','2020-06-20','2020-06-25','2020-06-30',
+                    '2020-07-10','2020-07-15','2020-08-09','2020-08-14','2020-08-29','2020-09-08','2020-09-18','2020-09-28',
+                    '2020-10-18','2020-10-23','2020-11-07','2020-11-22']
 # 2019
 # image_dates_2019 = ['2019-01-12','2019-02-06','2019-02-16','2019-02-26','2019-03-03','2019-03-08','2019-03-23','2019-03-28',
 #                '2019-04-02','2019-04-07','2019-04-17','2019-04-22','2019-05-12','2019-05-22','2019-05-27','2019-06-06',
@@ -148,6 +165,7 @@ image_dates_all = ["2015-11-19","2015-11-29", "2016-04-27", "2016-05-07", "2016-
 # Dates from this set that are supplemental to the dates already run
 image_dates = ['2017-01-12', '2017-02-01', '2017-02-21', '2017-03-03', '2017-07-01', '2017-08-10', '2017-09-24', '2017-10-29', '2018-02-01', '2018-02-26', '2018-03-18', '2018-03-28', '2018-04-07', '2018-05-07', '2018-07-01', '2018-07-16', '2018-07-31', '2018-10-24', '2018-11-18', '2018-11-23', '2018-12-08', '2019-02-11', '2019-03-13', '2019-04-12', '2019-06-11', '2019-06-21', '2019-08-05', '2019-08-10', '2019-08-25', '2019-09-14', '2019-09-29', '2019-10-14']
 # image_dates = ['2017-07-01', '2017-08-10', '2017-09-24', '2017-10-29', '2018-02-01', '2018-02-26', '2018-03-18', '2018-03-28', '2018-04-07', '2018-05-07', '2018-07-01', '2018-07-16', '2018-07-31', '2018-10-24', '2018-11-18', '2018-11-23', '2018-12-08', '2019-02-11', '2019-03-13', '2019-04-12', '2019-06-11', '2019-06-21', '2019-08-05', '2019-08-10', '2019-08-25', '2019-09-14', '2019-09-29', '2019-10-14']
+image_dates = image_dates_2022
 
 for dt in image_dates:
     # -- Dates
