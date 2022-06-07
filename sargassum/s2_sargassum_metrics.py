@@ -278,17 +278,18 @@ if __name__ == '__main__':
     # print(raster_path_list)
     print(f"Number of source rasters: {len(raster_path_list)}")
 
-    # Persistence 2016 - 2019
-    calc_metrics(raster_path_list, out_dir, '20160427', '20191228')
-    # Persistence 2017 - 2019
-    calc_metrics(raster_path_list, out_dir, '20170112', '20191228')
-    # Persistence 2018 - 2019
-    calc_metrics(raster_path_list, out_dir, '20180112', '20191228')
-    # Persistence 2017
-    calc_metrics(raster_path_list, out_dir, '20170112', '20171228')
-    # Persistence 2018
-    calc_metrics(raster_path_list, out_dir, '20180112', '20181208')
-    # Persistence 2019
-    calc_metrics(raster_path_list, out_dir, '20190112', '20191228')
+    # # Persistence 2016 - 2019
+    # calc_metrics(raster_path_list, out_dir, '20160427', '20191228')
+    # # Persistence 2017 - 2019
+    # calc_metrics(raster_path_list, out_dir, '20170112', '20191228')
+    # # Persistence 2018 - 2019
+    # calc_metrics(raster_path_list, out_dir, '20180112', '20191228')
+    # # Persistence 2017
+    # calc_metrics(raster_path_list, out_dir, '20170112', '20171228')
+    # # Persistence 2018
+    # calc_metrics(raster_path_list, out_dir, '20180112', '20181208')
+    # # Persistence 2019
+    # calc_metrics(raster_path_list, out_dir, '20190112', '20191228')
 
-
+    # Persistence 2016
+    calc_metrics(raster_path_list, out_dir, '20160427', '20161223')
