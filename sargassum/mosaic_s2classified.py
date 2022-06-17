@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     print(input_dir)
 
-    files = [file for file in os.listdir(input_dir) if file.endswith('.tif')]
+    files = [file for file in os.listdir(input_dir) if file.endswith('.tif') and file.startswith('202')]
 
     prefixes = []
     for f in files:

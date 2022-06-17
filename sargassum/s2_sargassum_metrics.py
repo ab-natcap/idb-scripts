@@ -274,22 +274,33 @@ if __name__ == '__main__':
     out_dir = base_dir
 
     # collect the raster paths from the source directory
-    raster_path_list = [r for r in glob.glob(os.path.join(source_dir, "s2qr_*sargassum.tif"))]
+    raster_path_list = [r for r in glob.glob(os.path.join(source_dir, "s2qr_202*sargassum.tif"))]
     # print(raster_path_list)
     print(f"Number of source rasters: {len(raster_path_list)}")
 
-    # # Persistence 2016 - 2019
+    # # Metrics 2016 - 2019
     # calc_metrics(raster_path_list, out_dir, '20160427', '20191228')
-    # # Persistence 2017 - 2019
+    # # Metrics 2017 - 2019
     # calc_metrics(raster_path_list, out_dir, '20170112', '20191228')
-    # # Persistence 2018 - 2019
+    # # Metrics 2018 - 2019
     # calc_metrics(raster_path_list, out_dir, '20180112', '20191228')
-    # # Persistence 2017
+    # # Metrics 2017
     # calc_metrics(raster_path_list, out_dir, '20170112', '20171228')
-    # # Persistence 2018
+    # # Metrics 2018
     # calc_metrics(raster_path_list, out_dir, '20180112', '20181208')
-    # # Persistence 2019
+    # # Metrics 2019
     # calc_metrics(raster_path_list, out_dir, '20190112', '20191228')
 
-    # Persistence 2016
-    calc_metrics(raster_path_list, out_dir, '20160427', '20161223')
+    # # Persistence 2016
+    # calc_metrics(raster_path_list, out_dir, '20160427', '20161223')
+
+    # Metrics 2020
+    calc_metrics(raster_path_list, out_dir, '20200102', '20201122')
+    # Metrics 2021
+    calc_metrics(raster_path_list, out_dir, '20210121', '20211222')
+    # Metrics 2021
+    calc_metrics(raster_path_list, out_dir, '20220101', '20220506')
+
+    # Metrics 2017 - 2021
+    calc_metrics(raster_path_list, out_dir, '20170112', '20211222')
+

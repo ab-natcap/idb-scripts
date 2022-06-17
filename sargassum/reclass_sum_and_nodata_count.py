@@ -195,7 +195,7 @@ if __name__ == "__main__":
             os.mkdir(new_dir)
 
     # collect the raster paths from the source directory
-    raster_path_list = [r for r in glob.glob(os.path.join(source_dir, "*mosaic_nd0.vrt"))]
+    raster_path_list = [r for r in glob.glob(os.path.join(source_dir, "202*mosaic_nd0.vrt"))]
     LOGGER.debug(f"Number of source rasters: {len(raster_path_list)}")
 
     ### Option to create rasters for testing ###
