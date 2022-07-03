@@ -52,17 +52,17 @@ def calc_metrics(in_path_list, out_dir, startdate, enddate):
 
     # Calculate a per-pixel sum of sargassum presence/absence across time series
     print("Creating sargassum presence count raster......")
-    # sum_by_pixel(subset_path_list, sum_raster_path)
+    sum_by_pixel(subset_path_list, sum_raster_path)
     print("Sum Raster: ", sum_raster_path)
 
     # Calculate a per-pixel count of no data occurrences
     print("Creating no data count raster......")
-    # nodata_count_by_pixel(subset_path_list, nodata_count_raster_path)
+    nodata_count_by_pixel(subset_path_list, nodata_count_raster_path)
     print("No Data Raster: ", nodata_count_raster_path)
 
     # Calculate persistence raster from sargassum presence and no data count rasters
     print("Creating sargassum persistence raster........")
-    # persistence(sum_raster_path, nodata_count_raster_path, raster_count, persistence_raster_path)
+    persistence(sum_raster_path, nodata_count_raster_path, raster_count, persistence_raster_path)
     print("Persistence Raster: ", persistence_raster_path)
 
     # Zonal Stats by shoreline segment (within 100m) for persistence and area
@@ -72,7 +72,7 @@ def calc_metrics(in_path_list, out_dir, startdate, enddate):
     area_layer = f's2qr_area_{startdate}_{enddate}'
 
     print("Calculating persistence zonal stats")
-    # persist_by_segment(persistence_raster_path, segment_poly_gpkg, segment_poly_layer, persistence_layer)
+    persist_by_segment(persistence_raster_path, segment_poly_gpkg, segment_poly_layer, persistence_layer)
 
     print("Thresholding sargassum present count raster")
     threshold = 4  # Count of sargassum detections must be greater than this number
@@ -269,12 +269,12 @@ if __name__ == '__main__':
     remote_base_dir = '/Users/arbailey/Google Drive/My Drive/sargassum/paper2022/data/source/s2qr_sargassum' # Remote
     local_base_dir = '/Users/arbailey/natcap/idb/data/work/sargassum/s2qr_sargassum'  # Local
     # base_dir = os.path.join('Users', 'arbailey', 'natcap', 'idb', 'data', 'work', 'sargassum', 's2qr_sargassum')
-    base_dir = remote_base_dir
+    base_dir = local_base_dir
     source_dir = os.path.join(base_dir, 'mosaics_by_date')
     out_dir = base_dir
 
     # collect the raster paths from the source directory
-    raster_path_list = [r for r in glob.glob(os.path.join(source_dir, "s2qr_202*sargassum.tif"))]
+    raster_path_list = [r for r in glob.glob(os.path.join(source_dir, "s2qr_*sargassum.tif"))]
     # print(raster_path_list)
     print(f"Number of source rasters: {len(raster_path_list)}")
 
@@ -294,12 +294,12 @@ if __name__ == '__main__':
     # # Persistence 2016
     # calc_metrics(raster_path_list, out_dir, '20160427', '20161223')
 
-    # Metrics 2020
-    calc_metrics(raster_path_list, out_dir, '20200102', '20201122')
-    # Metrics 2021
-    calc_metrics(raster_path_list, out_dir, '20210121', '20211222')
-    # Metrics 2021
-    calc_metrics(raster_path_list, out_dir, '20220101', '20220506')
+    # # Metrics 2020
+    # calc_metrics(raster_path_list, out_dir, '20200102', '20201122')
+    # # Metrics 2021
+    # calc_metrics(raster_path_list, out_dir, '20210121', '20211222')
+    # # Metrics 2021
+    # calc_metrics(raster_path_list, out_dir, '20220101', '20220506')
 
     # Metrics 2017 - 2021
     calc_metrics(raster_path_list, out_dir, '20170112', '20211222')
