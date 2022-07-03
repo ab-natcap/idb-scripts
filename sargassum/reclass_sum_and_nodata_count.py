@@ -179,11 +179,13 @@ if __name__ == "__main__":
     ### Get list of rasters ###
     # setup directories
 
-    source_dir = '/Users/arbailey/Google Drive/My Drive/sargassum/s2toa_classified_v1'
+    remote_source_dir = '/Users/arbailey/Google Drive/My Drive/sargassum/s2toa_classified_v1'
     remote_base_dir = '/Users/arbailey/Google Drive/My Drive/sargassum/paper2022/data/source/s2qr_sargassum' # Remote
+    local_source_dir = '/Users/arbailey/natcap/idb/data/work/sargassum/s2qr_sargassum/s2toa_classified_v1'  # Local
     local_base_dir = '/Users/arbailey/natcap/idb/data/work/sargassum/s2qr_sargassum'  # Local
 
     # base_dir = os.path.join('Users', 'arbailey', 'natcap', 'idb', 'data', 'work', 'sargassum')
+    source_dir = local_source_dir
     base_dir = local_base_dir
     # source_dir = os.path.join(base_dir, 's2qr_sargassum', 's2qr_sargassum')
     intermediate_dir = os.path.join(base_dir, 'intermediate')
@@ -195,7 +197,7 @@ if __name__ == "__main__":
             os.mkdir(new_dir)
 
     # collect the raster paths from the source directory
-    raster_path_list = [r for r in glob.glob(os.path.join(source_dir, "202*mosaic_nd0.vrt"))]
+    raster_path_list = [r for r in glob.glob(os.path.join(source_dir, "*mosaic_nd0.vrt"))]
     LOGGER.debug(f"Number of source rasters: {len(raster_path_list)}")
 
     ### Option to create rasters for testing ###
@@ -203,11 +205,13 @@ if __name__ == "__main__":
     #raster_path_list = create_test_rasters(intermediate_dir)
 
     ### Align rasters ###
-    aligned_raster_list = align_rasters_step(raster_path_list, intermediate_dir)
+    ### This step is extraneous because input VRT's are already aligned
+    # aligned_raster_list = align_rasters_step(raster_path_list, intermediate_dir)
 
     ### Reclass rasters ###
     reclassified_raster_list = reclassify_rasters_step(
-        aligned_raster_list, intermediate_dir)
+        raster_path_list, intermediate_dir)
+        # aligned_raster_list, intermediate_dir)  # run this version if aligning
 
     ### Create output rasters ###
     sum_by_pixel(reclassified_raster_list, out_dir)
