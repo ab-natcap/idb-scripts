@@ -205,16 +205,15 @@ if __name__ == "__main__":
     #raster_path_list = create_test_rasters(intermediate_dir)
 
     ### Align rasters ###
-    ### This step is extraneous because input VRT's are already aligned
-    # aligned_raster_list = align_rasters_step(raster_path_list, intermediate_dir)
+    aligned_raster_list = align_rasters_step(raster_path_list, intermediate_dir)
 
     ### Reclass rasters ###
     reclassified_raster_list = reclassify_rasters_step(
-        raster_path_list, intermediate_dir)
-        # aligned_raster_list, intermediate_dir)  # run this version if aligning
+        aligned_raster_list, intermediate_dir)
 
     ### Create output rasters ###
-    sum_by_pixel(reclassified_raster_list, out_dir)
-    nodata_count_by_pixel(reclassified_raster_list, out_dir)
+    # These steps incorporated into s2_sargassum_metrics.py for different time ranges
+    # sum_by_pixel(reclassified_raster_list, out_dir)
+    # nodata_count_by_pixel(reclassified_raster_list, out_dir)
 
     LOGGER.debug("Done.")
