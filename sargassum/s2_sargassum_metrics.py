@@ -284,22 +284,22 @@ if __name__ == '__main__':
     # calc_metrics(raster_path_list, out_dir, '20170112', '20191228')
     # # Metrics 2018 - 2019
     # calc_metrics(raster_path_list, out_dir, '20180112', '20191228')
-    # # Metrics 2017
-    # calc_metrics(raster_path_list, out_dir, '20170112', '20171228')
-    # # Metrics 2018
-    # calc_metrics(raster_path_list, out_dir, '20180112', '20181208')
-    # # Metrics 2019
-    # calc_metrics(raster_path_list, out_dir, '20190112', '20191228')
+    # Metrics 2017
+    calc_metrics(raster_path_list, out_dir, '20170112', '20171228')
+    # Metrics 2018
+    calc_metrics(raster_path_list, out_dir, '20180112', '20181208')
+    # Metrics 2019
+    calc_metrics(raster_path_list, out_dir, '20190112', '20191228')
 
-    # # Persistence 2016
-    # calc_metrics(raster_path_list, out_dir, '20160427', '20161223')
+    # Metrics 2016
+    calc_metrics(raster_path_list, out_dir, '20160427', '20161223')
 
-    # # Metrics 2020
-    # calc_metrics(raster_path_list, out_dir, '20200102', '20201122')
-    # # Metrics 2021
-    # calc_metrics(raster_path_list, out_dir, '20210121', '20211222')
-    # # Metrics 2021
-    # calc_metrics(raster_path_list, out_dir, '20220101', '20220506')
+    # Metrics 2020
+    calc_metrics(raster_path_list, out_dir, '20200102', '20201122')
+    # Metrics 2021
+    calc_metrics(raster_path_list, out_dir, '20210121', '20211222')
+    # Metrics 2021
+    calc_metrics(raster_path_list, out_dir, '20220101', '20220506')
 
     # Metrics 2017 - 2021
     calc_metrics(raster_path_list, out_dir, '20170112', '20211222')
