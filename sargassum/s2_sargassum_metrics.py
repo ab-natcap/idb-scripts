@@ -20,13 +20,17 @@ import pygeoprocessing as pygeo
 from osgeo import gdal
 import geopandas as gpd
 from rasterstats import zonal_stats
-import time
+from datetime import date
+import itertools
+
 
 TARGET_NODATA = -1
 TARGET_DATATYPE = gdal.GDT_Int16
 
+threshold = 4  # Count of sargassum detections must be greater than this number
 
-def calc_metrics(in_path_list, out_dir, startdate, enddate):
+
+def calc_metrics(in_path_list, out_dir, startdate, enddate, months=[]):
     """ Main function to calculate a single persistence raster for a specified date range
         Assuming the input rasters have the following values
         Sargassum present: 1
@@ -37,18 +41,36 @@ def calc_metrics(in_path_list, out_dir, startdate, enddate):
                 out_dir (string): directory location on disk to save outputs
                 startdate: earliest date of interest (that has existing classified raster) YYYYMMDD
                 enddate: latest date of interest YYYYMMDD
+                months: [] for all dates in time period.  otherwise, integer list of months [1,2,3,4,5,6,7,8,9,10,11,12]
             Returns:
                 Nothing
             """
-    # Subset the raster list to match the date range
-    subset_path_list = subset_list_by_daterange(in_path_list, startdate, enddate)
-    # print(subset_path_list)
-    raster_count = len(subset_path_list)
+    if months:
+        # Create a string suffix from the list of month integers
+        monthsuffix = 'm' + "".join([str(m).zfill(2) for m in months])
+        print(monthsuffix)
+        # Output rasters
+        sum_raster_path = os.path.join(out_dir, f'sargassum_presentcnt_by_pixel_{startdate}_{enddate}_{monthsuffix}.tif')
+        nodata_count_raster_path = os.path.join(out_dir, f'nodata_count_by_pixel_{startdate}_{enddate}_{monthsuffix}.tif')
+        persistence_raster_path = os.path.join(out_dir, f's2qr_sargassum_persistpct_{startdate}_{enddate}_{monthsuffix}.tif')
+        threshhold_raster_path = os.path.join(out_dir, f'sargassum_presentcnt_gt{threshold}_{startdate}_{enddate}_{monthsuffix}.tif')
+        # Output layers for persistence and area stats
+        persistence_layer = f's2qr_persistence_{startdate}_{enddate}_{monthsuffix}'
+        area_layer = f's2qr_area_{startdate}_{enddate}_{monthsuffix}'
+    else:
+        # Output rasters
+        sum_raster_path = os.path.join(out_dir, f'sargassum_presentcnt_by_pixel_{startdate}_{enddate}.tif')
+        nodata_count_raster_path = os.path.join(out_dir, f'nodata_count_by_pixel_{startdate}_{enddate}.tif')
+        persistence_raster_path = os.path.join(out_dir, f's2qr_sargassum_persistpct_{startdate}_{enddate}.tif')
+        threshhold_raster_path = os.path.join(out_dir, f'sargassum_presentcnt_gt{threshold}_{startdate}_{enddate}.tif')
+        # Output layers for persistence and area stats
+        persistence_layer = f's2qr_persistence_{startdate}_{enddate}'
+        area_layer = f's2qr_area_{startdate}_{enddate}'
 
-    # Output rasters
-    sum_raster_path = os.path.join(out_dir, f'sargassum_presentcnt_by_pixel_{startdate}_{enddate}.tif')
-    nodata_count_raster_path = os.path.join(out_dir, f'nodata_count_by_pixel_{startdate}_{enddate}.tif')
-    persistence_raster_path = os.path.join(out_dir, f's2qr_sargassum_persistpct_{startdate}_{enddate}.tif')
+    # Subset the raster list to match the date range and months (if needed)
+    subset_path_list = subset_list_by_daterange(in_path_list, startdate, enddate, months)
+    print(subset_path_list)
+    raster_count = len(subset_path_list)
 
     # Calculate a per-pixel sum of sargassum presence/absence across time series
     print("Creating sargassum presence count raster......")
@@ -68,15 +90,12 @@ def calc_metrics(in_path_list, out_dir, startdate, enddate):
     # Zonal Stats by shoreline segment (within 100m) for persistence and area
     segment_poly_gpkg = '/Users/arbailey/Google Drive/My Drive/sargassum/paper2022/data/work/os2022.gpkg'
     segment_poly_layer = 'shoreQR_5km_segments_buff100m'
-    persistence_layer = f's2qr_persistence_{startdate}_{enddate}'
-    area_layer = f's2qr_area_{startdate}_{enddate}'
+
 
     print("Calculating persistence zonal stats")
     persist_by_segment(persistence_raster_path, segment_poly_gpkg, segment_poly_layer, persistence_layer)
 
     print("Thresholding sargassum present count raster")
-    threshold = 4  # Count of sargassum detections must be greater than this number
-    threshhold_raster_path = os.path.join(out_dir, f'sargassum_presentcnt_gt{threshold}_{startdate}_{enddate}.tif')
     threshold_raster(sum_raster_path, threshhold_raster_path, threshold)
 
     print("Calculating sargassum area zonal stats")
@@ -84,7 +103,7 @@ def calc_metrics(in_path_list, out_dir, startdate, enddate):
 
 
 
-def subset_list_by_daterange(in_raster_path_list, startdate, enddate):
+def subset_list_by_daterange(in_raster_path_list, startdate, enddate, months):
     """
     Subset the list of rasters in the input directory for a specific date range
 
@@ -96,9 +115,29 @@ def subset_list_by_daterange(in_raster_path_list, startdate, enddate):
 
     # Sort the list and then get the indices for the start and end dates to slice the list
     in_raster_path_list.sort()
-    startindex = [i for i,path in enumerate(in_raster_path_list) if startdate in path][0]
-    endindex = [i for i,path in enumerate(in_raster_path_list) if enddate in path][0] + 1
-    out_raster_path_list = in_raster_path_list[startindex:endindex]
+    startindex = [i for i, path in enumerate(in_raster_path_list) if startdate in path][0]
+    endindex = [i for i, path in enumerate(in_raster_path_list) if enddate in path][0] + 1
+    raster_path_list = in_raster_path_list[startindex:endindex]
+
+    if months:
+        # convert integer month list to two-digit strings
+        month_strings = [str(m).zfill(2) for m in months]
+        print("Months:", ",".join(month_strings))
+        # Create a list of year strings by creating a range from startdate and enddate
+        start = date(int(startdate[0:4]), int(startdate[5:6]), int(startdate[7:8]))
+        end = date(int(enddate[0:4]), int(enddate[5:6]), int(enddate[7:8]))
+        year_strings = [str(year) for year in range(start.year, end.year + 1)]
+        print("Years:", ",".join(year_strings))
+        # Join the cartesian product of the years and months list.
+        # Remove any duplicates in case the start year and end year are the same and sort
+        yearmo_strings = list(set(["".join(i) for i in itertools.product(year_strings, month_strings)]))
+        yearmo_strings.sort()
+        print(yearmo_strings)
+        # Find matching rasters in specified months from the list of all rasters in that date range
+        out_raster_path_list = [r for r in raster_path_list if any(ym in r for ym in yearmo_strings )]
+    else:
+        out_raster_path_list = raster_path_list
+
 
     # Print input dates and output list length for QC
     print(f'Date Start: {startdate}  Date End: {enddate}')
@@ -278,29 +317,30 @@ if __name__ == '__main__':
     # print(raster_path_list)
     print(f"Number of source rasters: {len(raster_path_list)}")
 
-    # # Metrics 2016 - 2019
-    # calc_metrics(raster_path_list, out_dir, '20160427', '20191228')
-    # # Metrics 2017 - 2019
-    # calc_metrics(raster_path_list, out_dir, '20170112', '20191228')
-    # # Metrics 2018 - 2019
-    # calc_metrics(raster_path_list, out_dir, '20180112', '20191228')
-    # Metrics 2017
-    calc_metrics(raster_path_list, out_dir, '20170112', '20171228')
-    # Metrics 2018
-    calc_metrics(raster_path_list, out_dir, '20180112', '20181208')
-    # Metrics 2019
-    calc_metrics(raster_path_list, out_dir, '20190112', '20191228')
+    # # Metrics 2016
+    # calc_metrics(raster_path_list, out_dir, '20160427', '20161223')
+    # # Metrics 2017
+    # calc_metrics(raster_path_list, out_dir, '20170112', '20171228')
+    # # Metrics 2018
+    # calc_metrics(raster_path_list, out_dir, '20180112', '20181208')
+    # # Metrics 2019
+    # calc_metrics(raster_path_list, out_dir, '20190112', '20191228')
+    # # Metrics 2020
+    # calc_metrics(raster_path_list, out_dir, '20200102', '20201122')
+    # # Metrics 2021
+    # calc_metrics(raster_path_list, out_dir, '20210121', '20211222')
+    # # Metrics 2021
+    # calc_metrics(raster_path_list, out_dir, '20220101', '20220506')
 
-    # Metrics 2016
-    calc_metrics(raster_path_list, out_dir, '20160427', '20161223')
+    # # Metrics 2017 - 2021 -- All Months
+    # calc_metrics(raster_path_list, out_dir, '20170112', '20211222')
 
-    # Metrics 2020
-    calc_metrics(raster_path_list, out_dir, '20200102', '20201122')
-    # Metrics 2021
-    calc_metrics(raster_path_list, out_dir, '20210121', '20211222')
-    # Metrics 2021
-    calc_metrics(raster_path_list, out_dir, '20220101', '20220506')
-
-    # Metrics 2017 - 2021
-    calc_metrics(raster_path_list, out_dir, '20170112', '20211222')
+    # # Metrics 2017 - 2021 -- First Quarter
+    # calc_metrics(raster_path_list, out_dir, '20170112', '20211222', [1,2,3])
+    # Metrics 2017 - 2021 -- Second Quarter
+    calc_metrics(raster_path_list, out_dir, '20170112', '20211222', [4,5,6])
+    # Metrics 2017 - 2021 -- Third Quarter
+    calc_metrics(raster_path_list, out_dir, '20170112', '20211222', [7,8,9])
+    # Metrics 2017 - 2021 -- Fourth Quarter
+    calc_metrics(raster_path_list, out_dir, '20170112', '20211222', [10,11,12])
 
